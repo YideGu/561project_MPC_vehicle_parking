@@ -1,11 +1,7 @@
-function sys_d=linearization(state,input,pf,T)
+function sys_d=linearization(state,input,pf,p,T)
 %% following part is used to test this function 
-clear all
-parametersetup
-state=[1 1 1 1 1 1];
-input=[1 1];
-T=0.1;
-%%
+
+
 
 %vecotr parameter of force
 Cm1=pf(1);
@@ -18,7 +14,13 @@ D_r=pf(7);
 B_f=pf(8);
 C_f=pf(9);
 D_f=pf(10);
+m=p(1);
+Iz=p(2);
+l_f=p(3);
+l_r=p(4);
 %
+persistent A B x y phi v_x v_y omega delta d 
+if isempty(A)
 x=sym('x','real');
 y=sym('y','real');
 phi=sym('phi','real');
@@ -55,7 +57,8 @@ d=sym('d','real');
        diff(f4,d),diff(f4,delta);
        diff(f5,d),diff(f5,delta);
        diff(f6,d),diff(f6,delta) ];
-   
+end
+
 A_c= double(subs(A,{x,y,phi,v_x,v_y,omega,delta,d}, {state(1),state(2),state(3),state(4),state(5),state(6),input(1),input(2)} ));
 B_c= double(subs(B,{x,y,phi,v_x,v_y,omega,delta,d}, {state(1),state(2),state(3),state(4),state(5),state(6),input(1),input(2)} ));
 C_c=[1 0 0 0 0 0
@@ -63,7 +66,7 @@ C_c=[1 0 0 0 0 0
     0 0 1 0 0 0];
 D_c=0;
 sys_c= ss(A_c, B_c, C_c, D_c );
-sys_d= c2d(sys_c,T)
+sys_d= c2d(sys_c,T);
 
        
        
