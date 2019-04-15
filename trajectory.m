@@ -44,5 +44,5 @@ df=@(t,x) [
 
 opts = odeset('RelTol',1e-2,'AbsTol',1e-4);
 [t,statenew]=ode45(df,[0 T],state, opts);
-
+statenew= statenew + [0,0,0,normrnd(0,0.01),normrnd(0,0.01),normrnd(0,0.01)];
 end
