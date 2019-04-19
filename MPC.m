@@ -1,52 +1,77 @@
 
 %% parameters
-%Our time step is set to 0.01 s and the total simulation time is set to 6 s
+%wheelbases
+% bounding box 4.5m x 1.7m for compact car
+
+L=3;
+%distance from rear wheel to center of mass
+b=1.5;
+
+%time discretization
 dt=0.01;
+%time span
 T=0:dt:6;
-% Define Q and R function, adjust the value to change emphasis. 
-% For here, I assume we have 3 control states and 2 inputs. Change the dimension for actual use. 
-Q = [1 0 0; 0 1 0; 0 0 0.5];
-R = [0.1 0; 0 0.01];
 
 %% load reference trajectory
-% store U_ref and Y_ref as the reference trajectory, 
-U_ref=0;
-Y_ref=0;
-%The shape of Y_ref should be a x 601, where a is the state number
-%The shape of U_ref should be b x 601, where b is the input number
 
-%% Discrete-time A and B matrices
+U_ref=[ones(1,601) * 3; ones(1,601) * 0.25];
+
+[x,y,phi] = kinematic_model(6,[10 10 pi]',b,L,[U_ref(1,1) U_ref(2,1)],dt);
+
+Y_ref=[x,y,phi]';
+
+%the reference trajectory Yref is given in a 3x601 double
+
+%% 2.1 Discrete-time A and B matrices
 %these are the system linearized in discrete time about the reference
-%trajectory i.e. x(i+1)=A_i*x_i+B_i*u_i, A and B should be function of i,
-%where i represents the simulation time step. 
-A=@(i) dt;
-B=@(i) dt;
+%trajectory i.e. x(i+1)=A_i*x_i+B_i*u_i
+
+A=@(i) dt.*[1/dt 0 -U_ref(1,i)*sin(Y_ref(3,i))-b/L*U_ref(1,i)*tan(U_ref(2,i))*cos(Y_ref(3,i));
+            0 1/dt  U_ref(1,i)*cos(Y_ref(3,i))-b/L*U_ref(1,i)*tan(U_ref(2,i))*sin(Y_ref(3,i));
+            0 0 1/dt];
+
+B=@(i) dt.*[cos(Y_ref(3,i))-b/L*tan(U_ref(2,i))*sin(Y_ref(3,i)) -b/L*U_ref(1,i)*sin(Y_ref(3,i))/cos(U_ref(2,i))^2;
+            sin(Y_ref(3,i))+b/L*tan(U_ref(2,i))*cos(Y_ref(3,i)) b/L*U_ref(1,i)*cos(Y_ref(3,i))/cos(U_ref(2,i))^2;
+            tan(U_ref(2,i))/L U_ref(1,i)/L/cos(U_ref(2,i))^2];
 
 
-%% Number of decision variables for colocation method
+%% 2.2 Number of decision variables for colocation method
 npred=10;
+
 Ndec= 11*3 + 10*2;
 
-%% write and test function  to construct Aeq beq (equality constraints
-%enforce x(i+1)=A_i*x_i+B_i*u_i for the prediction horizon)
-% Where IC represents the initial condition
-% sample way of generating Aeq, beq
-IC = [0, 0, 0];
-[Aeq,beq]=eq_cons(1,A,B,10, IC);
+%% 2.3 write and test function  to construct Aeq beq (equality constraints
+%enforce x(i+1)=A_i*x_i+B_i*u_i for the prediction horizon) 
+%check the values of Aeq and beq timestep 1 (t=0)
+%with the given initial condition of Y(0)=[0.25;-0.25;-0.1];
 
+[Aeq,beq]=eq_cons(1,A,B,10, [10,10,pi]);
+Aeq_test1= Aeq;
+beq_test1= beq;
 
-%%  write and test function to generate limits on inputs 
-% sample way of generating constraints
+%% 2.4 write and test function to generate limits on inputs 
+%check the value at timestep 1 (t=0)
 [Lb_test1,Ub_test1]=bound_cons(1,U_ref,10);
 
-%% simulate controller working from initial condition
+%% 2.5 simulate controller working from initial condition [0.25;-0.25;-0.1]
 %use ode45 to between inputs
-
-X0 = [0.25 -0.25 -0.1]';
+Q = [1 0 0; 0 1 0; 0 0 0.5];
+R = [0.1 0; 0 0.01];
+X0 = [11 8 pi]';
 x = zeros(3, length(T));
 u = zeros(length(T)-1 , 2);
 x(:, 1) = X0;
 PredHorizon = 11;
+
+H = zeros(3* PredHorizon + 2*(PredHorizon - 1) );
+c = zeros(3* PredHorizon + 2*(PredHorizon - 1), 1);
+for i = 1:PredHorizon
+    H(((i-1)*3+1):(i*3), ((i-1)*3+1):(i*3)) = Q;
+end
+for i = 1:(PredHorizon - 1)
+    H( ((i-1)*2 + 3*PredHorizon + 1 ):( i*2 + 3*PredHorizon), ((i-1)*2 + 3*PredHorizon+1 ):(i*2 + 3*PredHorizon) ) = R;
+end
+
 
 odefun = @(t, x, u) [u(1)*cos(x(3))-(b/L)*u(1)*tan(u(2))*sin(x(3)) ;...
                   u(1)*sin(x(3))+(b/L)*u(1)*tan(u(2))*cos(x(3)) ;...
@@ -77,18 +102,19 @@ while(j < (length(T))-10)
     j = j + 1; 
 end
 
-% The following suggests a way to compute the error. 
-% max_dist_error = 0;
-% for t = 2:1:length(T)  
-%     if(x(1, t) >= 3 && x(1, t) <= 4)
-%         cur_error = sqrt((x(1, t)- Y_ref(1, t)).^2 + (x(2, t)- Y_ref(2, t)).^2);
-%         max_dist_error = max(max_dist_error, cur_error);
-%     end
-% end
-% plot(Y_ref(1, :), Y_ref(2, :),'b'); hold on;
-% plot(x(1, :), x(2, :),'r'); hold on;
 
-%% Self-define function
+max_dist_error = 0;
+for t = 2:1:length(T)  
+    if(x(1, t) >= 3 && x(1, t) <= 4)
+        cur_error = sqrt((x(1, t)- Y_ref(1, t)).^2 + (x(2, t)- Y_ref(2, t)).^2);
+        max_dist_error = max(max_dist_error, cur_error);
+    end
+end
+plot(Y_ref(1, 1: length(Y_ref) - 10), Y_ref(2, 1:length(Y_ref) - 10),'b'); hold on;
+plot(x(1, 1:length(x) - 10), x(2, 1:length(x) - 10),'r'); hold off;
+
+%% I highly recommend you write functions for constraint generation and dynamics down here and 
+%call them when needed above, for exa
 
 function [Aeq,beq]=eq_cons(idx,A,B,step, IC)
 Aeq = zeros(33,53);
@@ -125,6 +151,11 @@ for t = 2:step+1
     Aeq(3*t,31+2*t) = B_temp(3,2);
     
 end
+%build matrix for A_i*x_i+B_i*u_i-x_{i+1}=0
+%in the form Aeq*z=beq
+%initial_idx specifies the time index of initial condition from the reference trajectory 
+%A and B are function handles above
+
 
 end
 
@@ -143,10 +174,9 @@ function [Lb,Ub]=bound_cons(idx,U_ref,step)
     end
     for t = 1:step
         Lb(32+2*t) = 0-U_ref(1,idx+t-1);
-        Ub(32+2*t) = 1-U_ref(1,idx+t-1);
+        Ub(32+2*t) = 15-U_ref(1,idx+t-1);
         Lb(33+2*t) = -0.5-U_ref(2,idx+t-1);
         Ub(33+2*t) = 0.5-U_ref(2,idx+t-1);
     end
 
 end
-
