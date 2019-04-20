@@ -1,19 +1,31 @@
-function [x,y,phi] = kinematic_model(T,IC,b,L,u,dt)
+function [xfinal,yfinal,phifinal] = kinematic_model(T,IC,b,L,u)
+
+n=length(u);
+
+dt=T/n;
+
+
+
+
 
 odefun = @(t, x, u) [u(1)*cos(x(3))-(b/L)*u(1)*tan(u(2))*sin(x(3)) ;...
                   u(1)*sin(x(3))+(b/L)*u(1)*tan(u(2))*cos(x(3)) ;...
                   u(1)*tan(u(2))/L] ;
-
-[temp_t, temp_x] = ode45(@(t,x) odefun(t, x, u), [0 T], IC);
-x = temp_x(:,1);
-y = temp_x(:,2);
-phi = temp_x(:,3);
-%plot(temp_t,temp_x);
+              px(1)=IC(1);
+              py(1)=IC(2);
+              phi(1)=IC(3);
+for i =1:1:T/dt
+[temp_t, temp_x] = ode45(@(t,x) odefun(t, x, [u(1,i) u(2,i)]), [0 dt], [px(i) py(i) phi(i)]);
+px(i+1) = temp_x(end,1);
+py(i+1) = temp_x(end,2);
+phi(i+1) = temp_x(end,3);
+plot(px,py);
 %figure
 %plot(x, y);
-x = interp1(temp_t,x,0:dt:T)';
-y = interp1(temp_t,y,0:dt:T)';
-phi = interp1(temp_t,phi,0:dt:T)';
+end
+xfinal= px(2:n+1);
+yfinal =  py(2:n+1);
+phifinal =  phi(2:n+1);
 
               
           
