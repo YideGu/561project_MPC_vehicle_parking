@@ -13,7 +13,7 @@ dt=0.01;
 %time span We make the simulation in 18 seconds
 T=0:dt:18;
 
-X0 = [7.5 7.5 pi]';
+X0 = [7.1 7.5 pi]';
 
 %% load reference trajectory
 k = 1.15;
@@ -42,26 +42,35 @@ U_ref(1:2,1201:1801)=[ones(1,601) * 0.3; ones(1,601) * 0]; %0.6
 
 Y_ref(1:3,1201:1801)=[x;y;phi];
 %}
-U_ref(1:2,1:601)=[ones(1,601) * 1; zeros(1,601)];
+% U_ref(1:2,1:601)=[ones(1,601) * 1; zeros(1,601)];
+% 
+% [x,y,phi] = kinematic_model(6,[6.5 10.2 pi]',b,L,U_ref(1:2,1:601));
+% 
+% Y_ref(1:3,1:601)=[x;y;phi];
+% 
+% U_ref(1:2,601:1201)=[ones(1,601) * 0.675; ones(1,601) * 1.05];
+% 
+% [x,y,phi] = kinematic_model(6,Y_ref(:,601),b,L,U_ref(1:2,601:1201));
+% 
+% Y_ref(1:3,601:1201)=[x;y;phi];
+% 
+% U_ref(1:2,1201:1801)=[ones(1,601) * 1; ones(1,601) * 0]; %0.6
+% 
+% [x,y,phi] = kinematic_model(6,Y_ref(:,1201),b,L,U_ref(1:2,1201:1801));
+% 
+% Y_ref(1:3,1201:1801)=[x;y;phi];
+% 
+% plot(Y_ref(1, 1: length(Y_ref) - 10), Y_ref(2, 1:length(Y_ref) - 10),'b'); 
+% hold on;
+U_ref = zeros(2,1801);
+U_ref(1:2,1:401) = [ones(1,401)*1;ones(1,401)*0];
+U_ref(1:2,401:1201) = [ones(1,801)* 1.048; ones(1,801) *0.7];
+U_ref(1:2,1201:1801) = [ones(1,601)* 0.8; ones(1,601) * 0];
 
-[x,y,phi] = kinematic_model(6,[6.5 10.2 pi]',b,L,U_ref(1:2,1:601));
-
-Y_ref(1:3,1:601)=[x;y;phi];
-
-U_ref(1:2,601:1201)=[ones(1,601) * 0.675; ones(1,601) * 1.05];
-
-[x,y,phi] = kinematic_model(6,Y_ref(:,601),b,L,U_ref(1:2,601:1201));
-
-Y_ref(1:3,601:1201)=[x;y;phi];
-
-U_ref(1:2,1201:1801)=[ones(1,601) * 1; ones(1,601) * 0]; %0.6
-
-[x,y,phi] = kinematic_model(6,Y_ref(:,1201),b,L,U_ref(1:2,1201:1801));
-
-Y_ref(1:3,1201:1801)=[x;y;phi];
-
+[x,y,phi] = kinematic_model(18,[7.1 12.38 pi]',b,L,U_ref,dt);
+Y_ref=[x;y;phi];
 plot(Y_ref(1, 1: length(Y_ref) - 10), Y_ref(2, 1:length(Y_ref) - 10),'b'); 
-hold on;
+
 
 %the reference trajectory Yref is given in a 3x601 double
 
