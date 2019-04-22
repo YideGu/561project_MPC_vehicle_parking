@@ -32,7 +32,7 @@ Y_ref=[x;y;phi];
 plot(Y_ref(1, 1: length(Y_ref) - 10), Y_ref(2, 1:length(Y_ref) - 10),'b'); 
 
 
-%% Discrete-time A and B matrices
+%%Discrete-time A and B matrices
 %these are the system linearized in discrete time about the reference
 
 A=@(i) dt.*[1/dt 0 -U_ref(1,i)*sin(Y_ref(3,i))-b/L*U_ref(1,i)*tan(U_ref(2,i))*cos(Y_ref(3,i));
@@ -49,9 +49,20 @@ npred=10;
 
 Ndec= 11*3 + 10*2;
 
+%% 2.3 write and test function  to construct Aeq beq (equality constraints
+%enforce x(i+1)=A_i*x_i+B_i*u_i for the prediction horizon) 
+%check the values of Aeq and beq timestep 1 (t=0)
+%with the given initial condition of Y(0)=[0.25;-0.25;-0.1];
 
+[Aeq,beq]=eq_cons(1,A,B,10, [10,10,pi]);
+Aeq_test1= Aeq;
+beq_test1= beq;
 
-%% simulate controller working from initial condition
+%% 2.4 write and test function to generate limits on inputs 
+%check the value at timestep 1 (t=0)
+[Lb_test1,Ub_test1]=bound_cons(1,U_ref,10);
+
+%% 2.5 simulate controller working from initial condition [0.25;-0.25;-0.1]
 %use ode45 to between inputs
 Q = [1 0 0; 0 1 0; 0 0 0.5];
 R = [0.1 0; 0 0.01];
@@ -61,10 +72,6 @@ u = zeros(length(T)-1 , 2);
 x(:, 1) = X0;
 PredHorizon = 11;
 
-odefun = @(t, x, u) [u(1)*cos(x(3))-(b/L)*u(1)*tan(u(2))*sin(x(3)) ;...
-                  u(1)*sin(x(3))+(b/L)*u(1)*tan(u(2))*cos(x(3)) ;...
-                  u(1)*tan(u(2))/L] ;
-              
 H = zeros(3* PredHorizon + 2*(PredHorizon - 1) );
 c = zeros(3* PredHorizon + 2*(PredHorizon - 1), 1);
 for i = 1:PredHorizon
@@ -73,9 +80,12 @@ end
 for i = 1:(PredHorizon - 1)
     H( ((i-1)*2 + 3*PredHorizon + 1 ):( i*2 + 3*PredHorizon), ((i-1)*2 + 3*PredHorizon+1 ):(i*2 + 3*PredHorizon) ) = R;
 end
+
+
+odefun = @(t, x, u) [u(1)*cos(x(3))-(b/L)*u(1)*tan(u(2))*sin(x(3)) ;...
+                  u(1)*sin(x(3))+(b/L)*u(1)*tan(u(2))*cos(x(3)) ;...
+                  u(1)*tan(u(2))/L] ;
  
-              
-              
 j = 1;
 while(j < (length(T))-10)
     if(npred > (length(T)-j))
@@ -102,7 +112,13 @@ while(j < (length(T))-10)
 end
 
 
-
+max_dist_error = 0;
+for t = 2:1:length(T)  
+    if(x(1, t) >= 3 && x(1, t) <= 4)
+        cur_error = sqrt((x(1, t)- Y_ref(1, t)).^2 + (x(2, t)- Y_ref(2, t)).^2);
+        max_dist_error = max(max_dist_error, cur_error);
+    end
+end
 plot(Y_ref(1, 1: length(Y_ref) - 10), Y_ref(2, 1:length(Y_ref) - 10),'b'); hold on;
 plot(x(1, 1:length(x) - 10), x(2, 1:length(x) - 10),'r'); hold on;
 
@@ -111,16 +127,8 @@ Obstacle1_y = [-1,-1,1,1,-1,1,1,-1]*2.25;
 plot(Obstacle1_x, Obstacle1_y,'k');
 hold off;
 
-%% Error dynamics
-max_dist_error = 0;
-for t = 2:1:length(T)  
-    if(x(2, t) <= 6)
-        cur_error = sqrt((x(1, t)- Y_ref(1, t)).^2 + (x(2, t)- Y_ref(2, t)).^2);
-        max_dist_error = max(max_dist_error, cur_error);
-    end
-end
-disp(max_dist_error)
-%% Self defined function
+%% I highly recommend you write functions for constraint generation and dynamics down here and 
+%call them when needed above, for exa
 
 function [Aeq,beq]=eq_cons(idx,A,B,step, IC)
 Aeq = zeros(33,53);
