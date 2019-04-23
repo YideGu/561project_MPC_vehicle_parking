@@ -1,0 +1,36 @@
+clear all
+m = 1573;
+Iz = 2873;
+l_f = 1.35;
+l_r = 1.35;
+W_f=l_r/(l_f+l_r);
+W_r=l_f/(l_f+l_r);
+Cm1=17303;
+Cm2=175;
+Cr0=120;
+Cr2=0.5*1.225*0.35*2.5;
+B_r = 13;
+C_r = 2;
+D_r = W_f*m*9.81*1.2;
+B_f = 13;
+C_f = 2;
+D_f = W_r*m*9.81*1.2;
+
+hws = get_param(bdroot, 'modelworkspace');
+hws.DataSource = 'MAT-File';
+hws.FileName = 'params';
+hws.assignin('m', m);
+hws.assignin('Iz', Iz);
+hws.assignin('l_f', l_f);
+hws.assignin('l_r', l_r);
+hws.assignin('Cm1', Cm1);
+hws.assignin('Cm2', Cm2);
+hws.assignin('Cr0', Cr0);
+hws.assignin('Cr2', Cr2);
+hws.assignin('B_r', B_r);
+hws.assignin('C_r', C_r);
+hws.assignin('D_r', D_r);
+hws.assignin('B_f', B_f);
+hws.assignin('C_f', C_f);
+hws.saveToSource;
+hws.reload;

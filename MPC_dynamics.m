@@ -13,17 +13,17 @@ dt=0.01;
 %time span We make the simulation in 18 seconds
 T=0:dt:6;
 
-X0 = [6.5 10.2 0 5 0 0]';
+X0 = [6.5 10.2 0 3 0 0]';
 
 %% load reference trajectory
 
 
 K=0.01;
-K_n=200;
-G=1;
-G_n=137;
+K_n=100;
+G=0.6;
+G_n=187;
 
-Y_ref(:,1)=[6.5 10.2 0 5 0 0];
+Y_ref(:,1)=[6.5 10.2 0 3 0 0];
 
 U_ref(1:2,1:200)=[zeros(1,200); [K*ones(1,K_n), zeros(1, 200-K_n)]];
 
@@ -125,8 +125,8 @@ odefun=@(t,x, u) [
     x(4)*sin(x(3))+x(5)*cos(x(3));
     x(6);
     1/m*((Cm1*u(2)-Cm2*u(2)*x(4)-Cr0-Cr2*x(4)^2) - (D_f*sin(C_f*atan(B_f*( -atan2(l_f*x(6) + x(5),x(4))+u(1)))))*sin(u(1)) + m*x(5)*x(6));
-    1/m*(D_r*sin(C_r*atan(B_r*(atan2(l_r*x(6) - x(5),x(4))))) + (D_f*sin(C_f*atan(B_f*( -atan2(l_f*x(6) + x(5),x(4))+u(1)))))*cos(u(1)) - m*x(4)*x(6));
-    1/Iz*((D_f*sin(C_f*atan(B_f*( -atan2(l_f*x(6) + x(5),x(4))+u(1)))))*l_f*cos(u(1))- (D_r*sin(C_r*atan(B_r*(atan2(l_r*x(6) - x(5),x(4))))))*l_r)
+sign(u(1))* ( 1/m*(D_r*sin(C_r*atan(B_r*(atan2(l_r*x(6) - x(5),x(4))))) + (D_f*sin(C_f*atan(B_f*( -atan2(l_f*x(6) + x(5),x(4))+u(1)))))*cos(u(1)) - m*x(4)*x(6)) );
+sign(u(1))* ( 1/Iz*((D_f*sin(C_f*atan(B_f*( -atan2(l_f*x(6) + x(5),x(4))+u(1)))))*l_f*cos(u(1))- (D_r*sin(C_r*atan(B_r*(atan2(l_r*x(6) - x(5),x(4))))))*l_r)  )
     ];
 
               
