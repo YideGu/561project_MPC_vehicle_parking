@@ -3,16 +3,16 @@ clc;
 %% parameters
 %wheelbases
 % bounding box 4.5m x 1.7m for compact car
-L=4.5;
+L=2.7;
 %distance from rear wheel to center of mass
-b=2.25;
+b=1.35;
 
 %time discretization
 dt=0.01;
 %time span We make the simulation in 18 seconds
 T=0:dt:18;
 
-X0 = [7.1 7.5 pi]';
+X0 = [4.1 7.5 pi]';
 
 %% load reference trajectory
 k = 1.15;
@@ -24,10 +24,10 @@ Ut = [U1, U2];
 
 U_ref = zeros(2,1801);
 U_ref(1:2,1:401) = [ones(1,401)*1;ones(1,401)*0];
-U_ref(1:2,401:1201) = [ones(1,801)* 1.048; ones(1,801) *0.7];
+U_ref(1:2,401:1201) = [ones(1,801)* 0.63; ones(1,801) *0.7];
 U_ref(1:2,1201:1801) = [ones(1,601)* 0.8; ones(1,601) * 0];
 
-[x,y,phi] = kinematic_model(18,[7.1 12.38 pi]',b,L,U_ref,dt);
+[x,y,phi] = kinematic_model(18,[5.84 9.36 pi]',b,L,U_ref,dt);
 Y_ref=[x;y;phi];
 plot(Y_ref(1, 1: length(Y_ref) - 10), Y_ref(2, 1:length(Y_ref) - 10),'b'); 
 
@@ -48,8 +48,6 @@ B=@(i) dt.*[cos(Y_ref(3,i))-b/L*tan(U_ref(2,i))*sin(Y_ref(3,i)) -b/L*U_ref(1,i)*
 npred=10;
 
 Ndec= 11*3 + 10*2;
-
-
 
 %% simulate controller working from initial condition
 %use ode45 to between inputs

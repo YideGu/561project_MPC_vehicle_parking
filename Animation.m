@@ -7,7 +7,7 @@ figure
 % vehicle_shape = [4.2, 1.6]; % length x width
 % =======
 Obstacle1_x = [1.3,3.9,3.9,1.3,1.3,3.9,1.3,3.9];
-Obstacle1_y = [-1,-1,1,1,-1,1,1,-1] * 2.9;
+Obstacle1_y = [-1,-1,1,1,-1,1,1,-1] * 2.7;
 Obstacle2_x = [1.3,3.9,3.9,1.3,1.3,3.9,1.3,3.9] * -1;
 vehicle_shape = [4.45, 1.8]; % length x width
 % >>>>>>> d5addcbe4906f3c7bf10e257da56e1b9b712d8d3
