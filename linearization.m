@@ -1,10 +1,23 @@
-function [sys_d,Afun,Bfun]=linearization(state,input,T)
+function [sys_d,Afun,Bfun]=linearization(state,input,pf,p,T)
 %% following part is used to test this function 
 
-parametersetup
+
 
 %vecotr parameter of force
-
+Cm1=pf(1);
+Cm2=pf(2);
+Cr0=pf(3);
+Cr2=pf(4);
+B_r=pf(5);
+C_r=pf(6);
+D_r=pf(7);
+B_f=pf(8);
+C_f=pf(9);
+D_f=pf(10);
+m=p(1);
+Iz=p(2);
+l_f=p(3);
+l_r=p(4);
 %
 persistent A B x y phi v_x v_y omega delta d 
 if isempty(A)

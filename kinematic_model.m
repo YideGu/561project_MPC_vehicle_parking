@@ -1,6 +1,12 @@
-function [xfinal,yfinal,phifinal] = kinematic_model(T,IC,b,L,u,dt)
+function [xfinal,yfinal,phifinal] = kinematic_model(T,IC,b,L,u)
 
 n=length(u);
+
+dt=T/n;
+
+
+
+
 
 odefun = @(t, x, u) [u(1)*cos(x(3))-(b/L)*u(1)*tan(u(2))*sin(x(3)) ;...
                   u(1)*sin(x(3))+(b/L)*u(1)*tan(u(2))*cos(x(3)) ;...
@@ -17,9 +23,9 @@ plot(px,py);
 %figure
 %plot(x, y);
 end
-xfinal= px(1:n);
-yfinal =  py(1:n);
-phifinal =  phi(1:n);
+xfinal= px(2:n+1);
+yfinal =  py(2:n+1);
+phifinal =  phi(2:n+1);
 
               
           
